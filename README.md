@@ -145,8 +145,102 @@ if (numClicks >= 10) {
     broken.setVisibility(View.VISIBLE);
 }
 ```
+Сега имаме следния малък проблем - ако счупем яйцето и рестаритараме приложението, яйцето ще се покаже цяло. Но ако кликнем веднъж върху него ще се появи счупеното яйде. Това е така, защото при създаване на acitivity-то винаги показваме цялото яйце. Ако добавим горния код в `onResume`, то преди да се покаже активито ще смяняме картиката на яйцето (ако е нужно). Така оправяме този проблем.
 
+# Reset бутона
+Целта на Reset бутона е да стартира играта от началото. За да постигнем това е достатъчно да зануляваме броят на кликанията, които записахме в SharedPreference, при натискането на бутона. Така щом се отвори екрана с яйцето ще се прочете, че броят на кликанията е 0, ще се нарисува цялото яйде и играта ще е започнала от начало.
+Това правим по следния начин. Към бутонът Reset в xml-а добавяме `android:onClick="onResetClicked"`. В `MainActivity.java`:
+```java
+public void onResetClicked(View view) {
+    SharedPreferences preferences = getSharedPreferences("main", MODE_PRIVATE);
+    SharedPreferences.Editor editor = preferences.edit();
+    editor.putInt("clicks", 0);
+    editor.apply();
+}
+```
 
+# Статистики
+Ще направим екран `StatsActivity` със следните статистики:
 
+1. Брой отваряния на приложението
+1. Брой счупвания на яйцето
 
+## Дизайн
+В `activity_stats.xml`:
+```xml
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/labelAppOpened"
+    android:text="Брой отваряния на приложението: "/>
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/labelEggsBroken"
+    android:layout_below="@id/labelAppOpened"
+    android:text="Брой счупени яйца: "/>
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/statAppOpened"
+    android:layout_toRightOf="@id/labelAppOpened"
+    android:layout_alignTop="@id/labelAppOpened"
+    android:text="0"/>
+
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/statEggsBroken"
+    android:layout_toRightOf="@id/labelEggsBroken"
+    android:layout_alignTop="@id/labelEggsBroken"
+    android:text="0"/>
+```
+По този начин направих 4 текстови полета. Първите две за текстовете "Брой отваряния на приложението:" и "Брой счупени яйца: " и другите две за съответния брой. 
+Подредил съм ги в `RelativeLayout`, чрез атрибутите `android:layout_below`, `android:layout_toRightOf`, `android:layout_alignTop`.
+
+## Логика
+И за двете статистики ще използваме `SharedPreferences`, за да губим данните след затваряне на приложението.
+
+### Брой отваряния на приложението
+В `MainActivity.java` в `onCreate` чета записаната стойност за брой отваряния на приложението, увеличавам я с едно и пак я записвам в SharedPreferences.
+```java
+SharedPreferences preferences = getSharedPreferences("main", MODE_PRIVATE);
+int statAppsOpened = preferences.getInt("statAppsOpened", 0);
+statAppsOpened++;
+
+SharedPreferences.Editor editor = preferences.edit();
+editor.putInt("statAppsOpened", statAppsOpened);
+editor.apply();
+ ```
+ 
+В `StatsActivity.java` в `onCreate`, чета записаната стойност за брой отваряния на приложението и я изписвам на екрана.
+```java
+SharedPreferences preferences = getSharedPreferences("main", MODE_PRIVATE);
+int statAppsOpened = preferences.getInt("statAppsOpened", 0);
+
+TextView statAppsOpenedTV = (TextView) findViewById(R.id.statAppOpened);
+statAppsOpenedTV.setText(Integer.toString(statAppsOpened));
+```
+
+### Брой счупени яйца
+Аналогично на горната статистика.
+Искаме, когато се счупи яйцето, да увеличим брояча с едно. В `eggClicked` добавяме:
+```java
+if(numClicks == 10) {
+    int statEggsBroken = preferences.getInt("statEggsBroken", 0);
+    statEggsBroken++;
+    editor.putInt("statEggsBroken", statEggsBroken);
+    editor.apply();
+}
+```
+И в `StatsActivity.java` в `onCreate`:
+```java
+int statEggsBroken = preferences.getInt("statEggsBroken", 0);
+TextView statEggsBrokenTV = (TextView) findViewById(R.id.statEggsBroken);
+statEggsBrokenTV.setText(Integer.toString(statEggsBroken));
+```
+
+# Вече имаме работещо Tamago! :)
 
