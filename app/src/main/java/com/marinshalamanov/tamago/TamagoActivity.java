@@ -26,6 +26,14 @@ public class TamagoActivity extends AppCompatActivity {
 
         TextView score = (TextView) findViewById(R.id.score);
         score.setText(Integer.toString(numClicks));
+
+        if (numClicks >= 10) {
+            ImageView egg = (ImageView)findViewById(R.id.egg);
+            ImageView broken = (ImageView)findViewById(R.id.broken);
+
+            egg.setVisibility(View.INVISIBLE);
+            broken.setVisibility(View.VISIBLE);
+        }
     }
 
     public void eggClicked (View view) {
@@ -45,6 +53,13 @@ public class TamagoActivity extends AppCompatActivity {
 
             egg.setVisibility(View.INVISIBLE);
             broken.setVisibility(View.VISIBLE);
+        }
+
+        if(numClicks == 10) {
+            int statEggsBroken = preferences.getInt("statEggsBroken", 0);
+            statEggsBroken++;
+            editor.putInt("statEggsBroken", statEggsBroken);
+            editor.apply();
         }
     }
 
